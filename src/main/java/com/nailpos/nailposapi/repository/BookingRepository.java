@@ -21,6 +21,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpec
             "AND b.startTime < :endTime AND b.endTime > :startTime")
     List<Booking> findOverlappingBookings(
             @Param("staffId") Long staffId,
-            @Param("staffTime")LocalDateTime startTime,
-            @Param("endTime")LocalDateTime endTime);
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
 }
