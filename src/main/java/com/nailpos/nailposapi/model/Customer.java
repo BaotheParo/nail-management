@@ -2,10 +2,12 @@ package com.nailpos.nailposapi.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -31,6 +33,10 @@ public class Customer {
     @Enumerated(EnumType.STRING) // <-- SOFT DELETE (3)
     @Column(name = "status", nullable = false)
     private EntityStatus status = EntityStatus.ACTIVE;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     // --- PROJECTIONS (Tải dữ liệu tóm tắt) ---
 
