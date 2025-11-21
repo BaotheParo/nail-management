@@ -13,6 +13,8 @@ public class InvoiceDetailResponseDTO {
     private BigDecimal subTotalAmount;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
+    private String qrCodeUrl;      // Link ảnh QR
+    private String paymentContent;
     private List<PaymentResponseDTO> payments;
     private List<InvoiceItemResponseDTO> items;
 }

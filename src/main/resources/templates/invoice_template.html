@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Hóa Đơn Thanh Toán</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 14px; line-height: 1.5; } /* DejaVu Sans hỗ trợ tiếng Việt */
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #333; }
+        .info-table { width: 100%; margin-bottom: 20px; }
+        .info-table td { padding: 5px; vertical-align: top; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .items-table th { background-color: #f2f2f2; }
+        .total-section { text-align: right; margin-top: 20px; }
+        .qr-section { text-align: center; margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px; }
+        .qr-img { width: 200px; height: auto; }
+        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>NAIL POS SHOP</h1>
+    <p>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM<br/>Hotline: 0909 123 456</p>
+</div>
+
+<hr/>
+
+<table class="info-table">
+    <tr>
+        <td width="60%">
+            <strong>Khách hàng:</strong> <span th:text="${invoice.customer != null ? invoice.customer.name : 'Khách lẻ'}"></span><br/>
+            <strong>SĐT:</strong> <span th:text="${invoice.customer != null ? invoice.customer.phone : '---'}"></span>
+        </td>
+        <td width="40%" style="text-align: right;">
+            <strong>Mã HĐ:</strong> <span th:text="'#' + ${invoice.invoiceId}"></span><br/>
+            <strong>Ngày:</strong> <span th:text="${#temporals.format(invoice.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+        </td>
+    </tr>
+</table>
+
+<table class="items-table">
+    <thead>
+    <tr>
+        <th>STT</th>
+        <th>Dịch vụ</th>
+        <th>Đơn giá</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item, stat : ${invoice.items}">
+        <td th:text="${stat.count}" style="text-align: center; width: 50px;">1</td>
+        <td th:text="${item.serviceItem.name}">Cắt da tay</td>
+        <td th:text="${#numbers.formatDecimal(item.itemPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'" style="text-align: right;">50,000 đ</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="total-section">
+    <p>Tổng tiền: <b th:text="${#numbers.formatDecimal(invoice.subTotalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></b></p>
+    <p>Giảm giá: <span th:text="${#numbers.formatDecimal(invoice.discountAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></p>
+    <h3>THÀNH TIỀN: <span style="color: #d9534f;" th:text="${#numbers.formatDecimal(invoice.finalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></h3>
+</div>
+
+<div class="qr-section" th:if="${invoice.qrCodeUrl != null}">
+    <p><strong>Quét mã để thanh toán</strong></p>
+    <img th:src="${invoice.qrCodeUrl}" class="qr-img" alt="VietQR Payment Code" />
+    <p th:text="${invoice.paymentContent}">Nội dung CK</p>
+</div>
+
+<div class="footer">
+    <p>Cảm ơn quý khách và hẹn gặp lại!</p>
+</div>
+
+</body>
+</html>

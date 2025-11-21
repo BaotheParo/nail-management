@@ -3,6 +3,7 @@ package com.nailpos.nailposapi.repository;
 import com.nailpos.nailposapi.dto.TopCustomerDTO;
 import com.nailpos.nailposapi.model.Customer;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +29,8 @@ public interface CustomerRepository extends JpaRepository<Customer,Long>, JpaSpe
     List<TopCustomerDTO> findTopSpendingCustomers(@Param("startDate") LocalDateTime startDate,
                                                   @Param("endDate") LocalDateTime endDate,
                                                   Pageable pageable);
+
+    default List<Customer> findBySpecification(Specification<Customer> spec) {
+        return findAll(spec);
+    }
 }

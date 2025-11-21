@@ -6,6 +6,8 @@ import com.nailpos.nailposapi.dto.InvoiceRequestDTO;
 import com.nailpos.nailposapi.mapper.InvoiceMapper;
 import com.nailpos.nailposapi.model.Invoice;
 import com.nailpos.nailposapi.service.IInvoiceService;
+import com.nailpos.nailposapi.service.PdfService;
+import com.nailpos.nailposapi.service.VietQrService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,7 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +32,8 @@ public class InvoiceController {
 
     private final IInvoiceService invoiceService;
     private final InvoiceMapper invoiceMapper; // Dùng để map dữ liệu GET trả về
+    private final VietQrService vietQrService;
+    private final PdfService pdfService;
 
     /**
      * Endpoint chính: Tạo một hóa đơn mới
@@ -41,6 +47,8 @@ public class InvoiceController {
 
         // Lấy lại chi tiết hóa đơn vừa tạo để trả về
         InvoiceDetailResponseDTO dto = invoiceMapper.toDetailResponseDTO(newInvoice);
+
+        enrichWithQrCode(dto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -93,6 +101,41 @@ public class InvoiceController {
     public ResponseEntity<ApiResponse<InvoiceDetailResponseDTO>> getInvoiceById(@PathVariable Long id) {
         Invoice invoice = invoiceService.getInvoiceById(id);
         InvoiceDetailResponseDTO dto = invoiceMapper.toDetailResponseDTO(invoice);
+        enrichWithQrCode(dto);
         return ResponseEntity.ok(ApiResponse.ok(dto, "Lấy chi tiết hóa đơn thành công"));
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> exportInvoicePdf(@PathVariable Long id) {
+        // 1. Lấy dữ liệu hóa đơn
+        Invoice invoice = invoiceService.getInvoiceById(id);
+        InvoiceDetailResponseDTO dto = invoiceMapper.toDetailResponseDTO(invoice);
+
+        // 2. Gán thông tin QR (để hiển thị trong file PDF)
+        enrichWithQrCode(dto);
+
+        // 3. Tạo file PDF
+        byte[] pdfBytes = pdfService.generateInvoicePdf(dto);
+
+        // 4. Trả về file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        // inline: mở trên trình duyệt, attachment: tải về máy
+        headers.setContentDispositionFormData("inline", "invoice_" + id + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
+    // Hàm phụ trợ để gán thông tin QR vào DTO
+    private void enrichWithQrCode(InvoiceDetailResponseDTO dto) {
+        if (dto != null && dto.getFinalAmount() != null) {
+            String qrUrl = vietQrService.generateQrUrl(dto.getInvoiceId(), dto.getFinalAmount());
+            String content = vietQrService.generatePaymentContent(dto.getInvoiceId());
+
+            dto.setQrCodeUrl(qrUrl);
+            dto.setPaymentContent(content);
+        }
     }
 }
